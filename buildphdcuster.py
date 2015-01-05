@@ -6,7 +6,8 @@ import urllib
 import time
 
 userhome = expanduser('~')
-basepath = userhome + "/git/pivotal_hadop_docker/"
+basepath = userhome + "/git/workspace/"
+phdbinariespath = basepath + "/phdbinaries/"
 ips = {}
 nodesize = 10
 user = "root"
@@ -131,22 +132,45 @@ def copyfile(server, srcfile, destfile):
    ftp.close()
 
 def uploadPHDbinaries():
-   src = basepath + "phdbinaries/PCC-2.3.0-438.x86_64.tar.gz" 
-   dest = "PCC-2.3.0-438.x86_64.tar.gz" 
+   cmd = "mkdir /root/phd"
+   server = ips['phd0.pivotal.dev']
+   runSSHCommand(server, cmd)
+   cmd = "mkdir /root/phdbinaries" 
+   runSSHCommand(server, cmd) 
+   src = phdbinariespath + "PCC-2.3.0-438.x86_64.tar.gz" 
+   dest = "/root/phd/PCC-2.3.0-438.x86_64.tar.gz" 
    print "FTP: "+ src +" TO "+dest
-   copyfile(ips['dns.pivotal.dev'], src, dest) 
-   src = basepath + "phdbinaries/PHD-2.1.0.0-175.tar.gz" 
-   dest = "PHD-2.1.0.0-175.tar.gz" 
+   copyfile(ips['phd0.pivotal.dev'], src, dest) 
+   src = phdbinariespath + "PHD-2.1.0.0-175.tar.gz" 
+   dest = "/root/phdbinaries/PHD-2.1.0.0-175.tar.gz" 
    print "FTP: "+ src +" TO "+dest
-   copyfile(ips['dns.pivotal.dev'], src, dest) 
+   copyfile(ips['phd0.pivotal.dev'], src, dest) 
+   src = phdbinariespath + "PADS-1.2.1.0-10335.tar.gz"
+   dest = "/root/phdbinaries/PADS-1.2.1.0-10335.tar.gz"
+   copyfile(ips['phd0.pivotal.dev'], src, dest) 
+   src = phdbinariespath + "PRTS-1.3.0-48613.tar.gz"
+   dest = "/root/phdbinaries/PRTS-1.3.0-48613.tar.gz"
+   copyfile(ips['phd0.pivotal.dev'], src, dest) 
+   src = phdbinariespath + "madlib_1.6-1.2.0.1.tgz"
+   dest = "/root/phdbinaries/madlib_1.6-1.2.0.1.tgz"
+   copyfile(ips['phd0.pivotal.dev'], src, dest) 
+
+def installPCC():
+   cmd = "tar --no-same-owner -zxvf /root/phd/PCC-2.3.0-438.x86_64.tar.gz -C /root/phd"
+   server = ips['phd0.pivotal.dev'] 
+   runSSHCommand(server, cmd)
+   cmd = "cd /root/phd/PCC-2.3.0-438.x86_64;  ./install"
+   runSSHCommand(server, cmd)
 
 def main():
-   greeting()
-   createDNSImage()
-   createPhdImages()
-   launchContainers()
-   setupDNS()
-   uploadPHDbinaries() 
+    ips['phd0.pivotal.dev'] = '172.17.0.3' 
+#   greeting()
+#   createDNSImage()
+#   createPhdImages()
+#   launchContainers()
+#   setupDNS()
+#   uploadPHDbinaries() 
+    installPCC()
 
 if __name__ == '__main__':
     main()
